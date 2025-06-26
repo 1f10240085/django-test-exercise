@@ -10,9 +10,9 @@ def index(request):
         task = Task(title = request.POST['title'], due_at = make_aware(parse_datetime(request.POST['due_at'])))
         task.save()
 
-        tasks = Task.objects.all()
-        
-        context = {
-            'tasks':tasks,
-        }
-        return render(request, 'todo/index.html', context)
+    tasks = Task.objects.all()
+
+    context = {
+        'tasks':tasks,
+    }
+    return render(request, 'todo/index.html', context)
