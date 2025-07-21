@@ -60,5 +60,21 @@ def update(request, task_id):
     }
     return render(request, 'todo/edit.html', context)
 
-  
+def priority(request, task_id):
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        raise Http404("Task does not exist")
+
+    if request.method == 'POST':
+        priority_value = request.POST.get('priority')
+        if priority_value is not None:
+            task.priority = priority_value
+            task.save()
+            return redirect('index')
+
+    context = {
+        'task': task,
+    }
+    return render(request, 'todo/priority.html', context)
   
