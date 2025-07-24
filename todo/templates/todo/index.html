@@ -6,6 +6,12 @@
     <title>To Do Application</title>
     <meta charset="UTF-8">
     <meta name="author" content="INIAD">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+    <style>
+      #task-list { list-style: none; padding: 0; }
+      .task-item { margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; background: #fafafa; cursor: move; }
+    </style>
   </head>
 
   <body>
@@ -48,23 +54,46 @@
       <a href="{% url 'index' %}?priority=high">Highのみ</a>
     </div>
 
-    {% for task in tasks %}
-    <div class="text">
-      <h2><a href="{% url 'detail' task.id %}">{{ task.title }}</a></h2>
-      <ul>
-        <li>Posted at: {{ task.posted_at }}</li>
-        {% if task.due_at %} 
-        <li>Due at: {{ task.due_at }}</li>
-        {% endif %}
-        <li>Priority: {{ task.get_priority_display }}</li>
-        {% if task.completed %} 
-        <li>Status: Completed</li>
-        {% else %}
-        <li>Status: Not Completed</li>
-        {% endif %}
-      </ul>
-    </div>
-    {% endfor %}
-  </body>
+    <ul id="task-list">
+      {% for task in tasks %}
+      <li class="task-item" data-id="{{ task.id }}">
+        <div class="text">
+          <h2><a href="{% url 'detail' task.id %}">{{ task.title }}</a></h2>
+          <ul>
+            <li>Posted at: {{ task.posted_at }}</li>
+            {% if task.due_at %} 
+            <li>Due at: {{ task.due_at }}</li>
+            {% endif %}
+            <li>Priority: {{ task.get_priority_display }}</li>
+            {% if task.completed %} 
+            <li>Status: Completed</li>
+            {% else %}
+            <li>Status: Not Completed</li>
+            {% endif %}
+          </ul>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
 
-</html>
+
+    <script>
+      $(function() {
+        $("#task-list").sortable({
+          update: function(event, ui) {
+            var order = [];
+            $(".task-item").each(function(idx, el) {
+              order.push($(el).data("id"));
+            });
+            $.ajax({
+              url: "{% url 'reorder' %}",
+              method: "POST",
+              data: {
+                order: order.join(","),
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+              }
+            });
+          }
+        });
+      });
+    </script>
