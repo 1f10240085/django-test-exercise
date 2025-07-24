@@ -2,19 +2,28 @@ from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse
 from django.utils.timezone import make_aware
 from django.utils.dateparse import parse_datetime
-from todo.models import Task  # ← **赤文字：アプリ名とモデル名を正確に合わせる**
+from todo.models import Task, Tag
 from django.views.decorators.csrf import csrf_exempt
-import json  # ← JSONでPOSTデータを受け取るために必要
-
-# Create your views here.
+import json
 
 def index(request):
     if request.method == 'POST':
+        due_input = request.POST.get('due_at')
+        parsed_due = parse_datetime(due_input) if due_input else None
+        due_at = make_aware(parsed_due) if parsed_due else None
+
         task = Task(
             title=request.POST['title'],
-            due_at=make_aware(parse_datetime(request.POST['due_at']))
+            due_at=due_at,
+            priority=request.POST.get('priority', 'medium')
         )
         task.save()
+
+        tag_input = request.POST.get('tags', '')
+        tag_names = [t.strip() for t in tag_input.split(',') if t.strip()]
+        for name in tag_names:
+            tag, _ = Tag.objects.get_or_create(name=name)
+            task.tags.add(tag)
 
     priority = request.GET.get('priority')
     order = request.GET.get('order')
@@ -35,7 +44,6 @@ def index(request):
         'tasks': tasks,
     }
     return render(request, 'todo/index.html', context)
-
 
 def detail(request, task_id):
     try:
@@ -66,36 +74,20 @@ def update(request, task_id):
         task.title = request.POST['title']
         task.due_at = make_aware(parse_datetime(request.POST['due_at']))
         task.save()
+
+        task.tags.clear()
+        tag_input = request.POST.get('tags', '')
+        tag_names = [t.strip() for t in tag_input.split(',') if t.strip()]
+        for name in tag_names:
+            tag, _ = Tag.objects.get_or_create(name=name)
+            task.tags.add(tag)
+
         return redirect('index')
 
     context = {
         'task': task,
     }
     return render(request, 'todo/edit.html', context)
-
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse, Http404
-from django.shortcuts import render, redirect
-import json
-
-def priority(request, task_id):
-    try:
-        task = Task.objects.get(pk=task_id)
-    except Task.DoesNotExist:
-        raise Http404("Task does not exist")
-
-    if request.method == 'POST':
-        priority_value = request.POST.get('priority')
-        if priority_value is not None:
-            task.priority = priority_value
-            task.save()
-            return redirect('index')
-
-    context = {
-        'task': task,
-    }
-    return render(request, 'todo/priority.html', context)
-
 
 @csrf_exempt
 def reorder_tasks(request):
@@ -109,4 +101,3 @@ def reorder_tasks(request):
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
     return JsonResponse({"status": "error"}, status=400)
-
