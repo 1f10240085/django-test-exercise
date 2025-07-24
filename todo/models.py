@@ -1,7 +1,12 @@
-from django.db import models 
-from django.utils import timezone 
+from django.db import models
+from django.utils import timezone
 
-# Create your models here.
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class Task(models.Model):
     title = models.CharField(max_length=200)
     completed = models.BooleanField(default=False)
@@ -13,10 +18,10 @@ class Task(models.Model):
         default='medium'
     )
     order = models.PositiveIntegerField(default=0)
+    tags = models.ManyToManyField(Tag, blank=True)  # タグ機能追加！
 
     class Meta:
         ordering = ['order']
-
 
     def is_overdue(self, dt):
         if self.due_at is None:

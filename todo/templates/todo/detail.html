@@ -2,32 +2,39 @@
 <!DOCTYPE html>
 <html lang="ja">
 
-  <head>
-    <title>To Do Application</title>
-    <meta charset="UTF-8">
-    <meta name="author" content="INIAD">
-  </head>
+<head>
+  <title>To Do Application</title>
+  <meta charset="UTF-8">
+  <meta name="author" content="INIAD">
+</head>
 
-  <body>
-    <h1>{{ task.title }}</h1>
-    <ul>
-      <li>Posted at: {{ task.posted_at }}</li>
-      {% if task.due_at %}
-      <li>Due at: {{ task.due_at }}</li>
-      {% endif %}
-      {% if task.completed %}
-      <li>Status: Completed</li>
-      {% else %}
-      <li>Status: Not Completed</li>
-      {% endif %}
-      <li>優先度: {{ task.get_priority_display }}</li>
-    </ul>
+<body>
+  <h1>{{ task.title }}</h1>
+  <ul>
+    <li>Posted at: {{ task.posted_at }}</li>
+    {% if task.due_at %}
+    <li>Due at: {{ task.due_at }}</li>
+    {% endif %}
+    {% if task.completed %}
+    <li>Status: Completed</li>
+    {% else %}
+    <li>Status: Not Completed</li>
+    {% endif %}
+    <li>優先度: {{ task.get_priority_display }}</li>
+    <li>タグ:
+      {% for tag in task.tags.all %}
+        {{ tag.name }}{% if not forloop.last %}, {% endif %}
+      {% empty %}
+        No tags
+      {% endfor %}
+    </li>
+  </ul>
 
-    <div>
-      <a href="{% url 'index' %}">Top</a> |
-      <a href="{% url 'update' task.id %}">Edit</a> |
-      <a href="{% url 'delete' task.id %}">Delete</a>
-    </div>
-  </body>
+  <div>
+    <a href="{% url 'index' %}">Top</a> |
+    <a href="{% url 'update' task.id %}">Edit</a> |
+    <a href="{% url 'delete' task.id %}">Delete</a>
+  </div>
+</body>
 
 </html>
