@@ -17,22 +17,25 @@ def index(request):
         task.save()
 
     priority = request.GET.get('priority')
+    order = request.GET.get('order')
+
     if priority in ['low', 'medium', 'high']:
         tasks = Task.objects.filter(priority=priority)
-    elif request.GET.get('order') == 'due':
-        tasks = Task.objects.order_by('due_at')
     else:
-        tasks = Task.objects.order_by('-posted_at')
-    
-    if request.GET.get('order') == 'due':
-        tasks = Task.objects.order_by('due_at')
+        tasks = Task.objects.all()
+
+    if order == 'due':
+        tasks = tasks.order_by('due_at')
+    elif order == 'post':
+        tasks = tasks.order_by('-posted_at')
     else:
-        tasks = Task.objects.order_by('order')
+        tasks = tasks.order_by('order')
 
     context = {
         'tasks': tasks,
     }
     return render(request, 'todo/index.html', context)
+
 
 def detail(request, task_id):
     try:
